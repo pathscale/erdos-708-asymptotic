@@ -1,0 +1,196 @@
+\documentclass[11pt]{article}
+\usepackage[margin=0.95in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,url,array}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\DeclareMathOperator{\lcm}{lcm}
+
+\title{Whole-Cofactor Peeling, Extreme-Point LP Rank Rounding, and\\ Shifted-Interval Hinge Duality for Erd\H{o}s Problem 708}
+\author{C. Bergstr\"om \\ 24x AI Research \\ \texttt{ORCID: 0009-0008-7153-1817}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Let $A \subseteq \mathbb{Z}_{\ge 2}$ be a set of $n$ integers with maximum $M$. Let $g(n)$ be the smallest integer such that every interval of length $M$ contains a subset $B$ of size at most $g(n)$ whose product is divisible by the product of all elements in $A$. Erd\H{o}s and Sur\'anyi proved that $g(n)$ is at least $(2 - o(1)) n$ in 1959. Erd\H{o}s later posed the question of whether $g(n) \le (2 + o(1)) n$. Previous methods, such as those by Chen, established bounds of $g(n) \le 11n$, but these methods incur a $+2n$ large-prime rounding surcharge in the intermediate interval regime. We eliminate this surcharge by combining whole-cofactor cumulative-GCD peeling, smooth extreme-point linear-programming rounding, and shifted-interval hinge inequalities. We establish an unconditional bound of $g(n) \le (56501 / 6400 + o(1)) n \approx 8.83n$ (and $g(n) \le 10n$ for all $n \ge 1{,}446$), reducing the asymptotic upper bound by approximately 20\% compared to previous work, alongside a self-contained $\tau(A, I) \le 3n$ bound for $M \ge 9n^2$ and a universal vertex-saving bound for semiprime multigraphs.
+\end{abstract}
+
+\section{Introduction and Reduction Architecture}
+
+For a finite set $A = \{a_1 < \dots < a_n\} \subseteq \mathbb{Z}_{\ge 2}$ with $M = a_n$ and an interval $I = \{x + 1, \dots, x + M\}$ ($x \in \mathbb{Z}_{\ge 0}$), write $D_p(A) := \sum_{a \in A} v_p(a)$. Define the product-cover number and its fractional relaxation by
+\[
+\tau(A, I) := \min\Bigl\{ |B| : B \subseteq I, \; \prod_{a \in A} a \;\Big|\; \prod_{b \in B} b \Bigr\}, \qquad g(n) := \sup_{|A| = n, \; x \ge 0} \tau(A, I),
+\]
+and
+\[
+\tau^*(A, I) := \min\Bigl\{ \sum_{b \in I} x_b : x \in [0, 1]^I, \; \forall p \le M, \; \sum_{b \in I} v_p(b) x_b \ge D_p(A) \Bigr\}.
+\]
+
+Erd\H{o}s and Sur\'anyi~\cite{erdossuranyi59} proved $g(3) = 4$ and $g(n) \ge (2 - o(1)) n$ via semiprime cliques $A = \{p_i p_j : 1 \le i < j \le \ell\}$ at $M \asymp n \ln^2 n$. In~\cite{erdos92c,erdos95}, Erd\H{o}s asked whether $g(n) \le (2 + o(1)) n$ (Problem 708 in~\cite{bloom708}). A companion preprint~\cite{bergstrom26small} resolves the exact small-$n$ values $g(4) = 5$, $g(5) = 6$, and $g(6) = 8$, and establishes $g(7) \ge 9$ and $g(8) \ge 11$. For general $n$, Chen~\cite{chen26} proved $\tau(A, I) \le 2 n$ for $M \ge 8 n^3$ ($3 n$ for $M \ge 9 n^2$), and established for every $M \ge 1$, shifted interval $I = \{x + 1, \dots, x + M\}$ ($x \ge 0$), and prime-weight vector $w = (w_p)_{p \le M} \in [0, 1]^{\{p \le M\}}$ (writing $X_w(m) := \sum_{p \le M} v_p(m) w_p$) the unconditional shifted-interval hinge inequality
+\[
+\sum_{m = 1}^M (X_w(m) - c)_+ \le \sum_{b \in I} (X_w(b) - 1)_+
+\]
+at $c = 56501 / 6400$ (implying $g(n) \le 11 n$) and, formalized end to end in Lean~4, at $c = 97 / 10$ (implying $g(n) \le 12 n$), while noting two obstacles.
+
+\begin{enumerate}
+\item \emph{Large-prime rounding surcharge ($4 n$ barrier).} Vertex rounding on all of $A$ for $M < 9 n^2$ incurs up to $|P(A)| \le n + \pi(3 n)$ fractional variables from primes $> M^{1/2}$ and primes $\le 3 n$. That route gives $g(n) \le \lceil c n \rceil + 2 n$ (and $(c + 1 + o(1)) n$ asymptotically) and cannot drop below $4 n$ because $(H_c)$ fails whenever $c < 2$.
+\item \emph{Cross-scale coupling below $M = 8 n^3$.} Uncoupled prime-tier splitting $\tau(A, I) \le \tau(D|_{T_1}, I) + \tau(D|_{T_2}, I)$ exceeds $2 n$ across $M < n^3$. Remark~\ref{rem:tier} exhibits a cross-tier family $A = \{r_k p_k q_i\}$ where uncoupled splitting costs $(7/3 - o(1)) n$.
+\end{enumerate}
+
+Whole-cofactor peeling and smooth vertex rounding remove the first obstacle across $2 n < M \le c^2 n^2$ by keeping $|P(A_{\mathrm{sm}})| \le \pi(Q_n - 1) = o(n)$ and peeling $A_{\mathrm{hi}}$ in $\le 2 |A_{\mathrm{hi}}| - 1$ picks. Removing the $+2 n$ surcharge lowers $g(n)$ unconditionally to $(56501 / 6400 + o(1)) n$ ($g(n) \le 10 n$ for $n \ge 1{,}446$) and reduces $M \le 4 n^2$ directly to $(H_2)$. Sections~2 and~4 resolve the $q > M^{1/2}$ and semiprime-multigraph cases of the second obstacle.
+
+\begin{proposition}[Short-interval closure $M \le 2 n$]
+\label{prop:short}
+For every $n$-set $A \subseteq \mathbb{Z}_{\ge 2}$ with $M = \max(A) \le 2 n$ and every $I = \{x + 1, \dots, x + M\}$ ($x \ge 0$), $\tau(A, I) \le M \le 2 n$.
+\end{proposition}
+\begin{proof}
+Because $\binom{x + M}{M} = (\prod_{b \in I} b) / M! \in \mathbb{Z}$~\cite{hardywright08} and $\prod_{a \in A} a \mid M!$, the full interval $B = I$ covers $A$ with $|B| = M \le 2 n$.
+\end{proof}
+
+\section{Whole-Cofactor Peeling via Incremental Cumulative-GCD}
+
+This section peels every element carrying a prime factor $q \ge Q$ together with its smooth cofactor at $< 2$ picks per element.
+
+\begin{lemma}[Incremental Cumulative-GCD Extension]
+\label{lem:cgcd}
+Let $I$ be an interval of $M$ consecutive positive integers, let $B_0 \subseteq I$ satisfy $H_0 \mid \prod_{u \in B_0} u$ for some integer $H_0 \ge 1$, and let $h \in \{1, \dots, M\}$. If $\gcd(H_0, h) \le \lfloor M / (|B_0| + 1) \rfloor$, then there exists $b \in I \setminus B_0$ such that $H_0 h \mid b \prod_{u \in B_0} u$.
+\end{lemma}
+\begin{proof}
+Since $1 \le h \le M$, the interval $I$ contains at least one multiple $m$ of $h$. If $m \notin B_0$, take $b = m$. Otherwise every multiple of $h$ in $I$ lies in $B_0$, so $h \mid \prod_{u \in B_0} u$. Because $H_0 \mid \prod_{u \in B_0} u$ as well, the least common multiple $\lcm(H_0, h) = (H_0 h) / g^*$ divides $\prod_{u \in B_0} u$, where $g^* := \gcd(H_0, h) \le \lfloor M / (|B_0| + 1) \rfloor$. Since $|I \cap g^* \mathbb{Z}| \ge \lfloor M / g^* \rfloor \ge |B_0| + 1$, pigeonhole yields $b \in I \setminus B_0$ divisible by $g^*$, whence $H_0 h = g^* \lcm(H_0, h) \mid b \prod_{u \in B_0} u$.
+\end{proof}
+
+\begin{theorem}[Whole-Cofactor Peeling Reduction]
+\label{thm:peel}
+Let $A \subseteq \mathbb{Z}_{\ge 2}$ have $|A| = n$ and $M = \max(A)$, and let $I$ be an interval of $M$ consecutive positive integers. For an integer $Q \ge 2$, partition $A = A_{\mathrm{sm}} \sqcup A_{\mathrm{hi}}$ into $A_{\mathrm{sm}} := \{a \in A : p_{\max}(a) < Q\}$ and $A_{\mathrm{hi}} := \{a \in A : p_{\max}(a) \ge Q\}$. Let $B_{\mathrm{sm}} \subseteq I$ cover $A_{\mathrm{sm}}$ (with $B_{\mathrm{sm}} = \emptyset$ if $A_{\mathrm{sm}} = \emptyset$), and set $L := |B_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| \ge 1$. Suppose $Q^2 > M$ and every $a \in A_{\mathrm{hi}}$ satisfies $a / p_{\max}(a) \le \lfloor M / L \rfloor$ (in particular, whenever $Q^2 > M$ and $Q \ge L$). When $A_{\mathrm{hi}} \neq \emptyset$, the cover $B_{\mathrm{sm}}$ extends to a cover $B \subseteq I$ of $A$ of size $|B| \le |B_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| - r \le L - 1$, where $r \ge 1$ counts the distinct primes $\ge Q$ dividing $\prod_{a \in A_{\mathrm{hi}}} a$. Two regimes follow for any target budget $L_0 \ge L$.
+\begin{enumerate}
+\item \emph{Regime 1 ($2 n < M \le L_0^2 + 2 L_0$).} Setting $Q := L_0 + 1$ gives $Q^2 = (L_0 + 1)^2 > M$ and $Q > L_0 \ge L$, so $a / p_{\max}(a) \le \lfloor M / Q \rfloor \le \lfloor M / L \rfloor$. For $L_0 = 2 n$ and $|B_{\mathrm{sm}}| \le 2 |A_{\mathrm{sm}}|$, this reduces $2 n < M \le 4 n^2 + 4 n$ to $2 n$-smooth sets.
+\item \emph{Regime 2 ($M \ge L_0^2$).} Setting $Q := \lfloor M^{1/2} \rfloor + 1$ gives $Q^2 > M$, and $k := \lfloor M^{1/2} \rfloor \ge L_0$ implies $M \ge k^2 \ge L_0 k$, so $\lfloor M / L_0 \rfloor \ge k$. Every $a \in A_{\mathrm{hi}}$ then has $a / p_{\max}(a) < M^{1/2}$ and hence $a / p_{\max}(a) \le k \le \lfloor M / L_0 \rfloor \le \lfloor M / L \rfloor$, reducing $M \ge 4 n^2$ (at $L_0 = 2 n$) to $\lfloor M^{1/2} \rfloor$-smooth sets.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+Assume $A_{\mathrm{hi}} \neq \emptyset$. Because $Q^2 > M$, each $a \in A_{\mathrm{hi}}$ has a unique prime factor $q = p_{\max}(a) \ge Q$, with $v_q(a) = 1$ and cofactor $c(a) := a / q \le \lfloor M / L \rfloor$ satisfying $p_{\max}(c(a)) < Q$. Group $A_{\mathrm{hi}} = \bigsqcup_{t = 1}^r G_t$ by $q_t$, writing $G_t = \{q_t c_{t, 1} < \dots < q_t c_{t, m_t}\}$ with $m_t \ge 1$ and $\sum_{t = 1}^r m_t = |A_{\mathrm{hi}}|$.
+\begin{enumerate}
+\item \emph{First element of each $q_t$-group.} Start from $B_{\mathrm{cur}} = B_{\mathrm{sm}}$ and $H_{\mathrm{cur}} = \prod_{a \in A_{\mathrm{sm}}} a$, and apply Lemma~\ref{lem:cgcd} sequentially for $t = 1, \dots, r$ to $h_t := q_t c_{t, 1} \le M$. Because $q_t \ge Q$ divides neither $\prod_{a \in A_{\mathrm{sm}}} a$ nor any earlier $h_s$ ($s < t$), the divisor bound $\gcd(H_{\mathrm{cur}}, q_t c_{t, 1}) = \gcd(H_{\mathrm{cur}}, c_{t, 1}) \le c_{t, 1} \le \lfloor M / L \rfloor \le \lfloor M / (|B_{\mathrm{cur}}| + 1) \rfloor$ holds. Adding these $r$ elements covers $H_1 := (\prod_{a \in A_{\mathrm{sm}}} a) \prod_{t = 1}^r (q_t c_{t, 1})$.
+\item \emph{Remaining prime copies $q_t^{m_t - 1}$.} For each $t$ with $m_t \ge 2$, put $u_t := v_{q_t}(\prod_{b \in B_{\mathrm{cur}}} b) \ge 1$. When $u_t < m_t$, the interval $I$ contains $\ge \lfloor M / q_t \rfloor \ge c_{t, m_t} \ge m_t$ multiples of $q_t$, and at most $u_t$ lie in $B_{\mathrm{cur}}$. Choose $m_t - u_t$ untouched multiples of $q_t$ in $I \setminus B_{\mathrm{cur}}$. Their union across $t = 1, \dots, r$ adds at most $\sum_{t = 1}^r (m_t - 1) = |A_{\mathrm{hi}}| - r$ elements and covers $H_2 := (\prod_{a \in A_{\mathrm{sm}}} a) \prod_{t = 1}^r (q_t^{m_t} c_{t, 1})$.
+\item \emph{Remaining cofactors $c_{t, j}$ ($2 \le j \le m_t$).} Exactly $|A_{\mathrm{hi}}| - r$ cofactors remain, each $\le \lfloor M / L \rfloor$. Across $|A_{\mathrm{hi}}| - r$ applications of Lemma~\ref{lem:cgcd}, the size bound $|B_{\mathrm{cur}}| + 1 \le |B_{\mathrm{sm}}| + r + 2 (|A_{\mathrm{hi}}| - r) = |B_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| - r \le L$ holds, so $\gcd(H_{\mathrm{cur}}, c_{t, j}) \le c_{t, j} \le \lfloor M / (|B_{\mathrm{cur}}| + 1) \rfloor$. Thus $B_{\mathrm{cur}}$ covers $A$ in size $\le |B_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| - r$. \qedhere
+\end{enumerate}
+\end{proof}
+
+\begin{corollary}[Self-contained quadratic-interval bound $M \ge 9 n^2$]
+\label{cor:quad}
+Every $n$-set $A \subseteq \mathbb{Z}_{\ge 2}$ with $M = \max(A) \ge 9 n^2$ and every interval $I$ of length $M$ satisfy $\tau(A, I) \le 3 |A_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| \le 3 n$ at $Q = \lfloor M^{1/2} \rfloor + 1$.
+\end{corollary}
+\begin{proof}
+Set $k := \lfloor M^{1/2} \rfloor \ge 3 n$, so $M \ge k^2 \ge 3 n k$ gives $\lfloor M / (3 n) \rfloor \ge k$. For each $a \in A_{\mathrm{sm}}$ ($p_{\max}(a) \le k$), let $b_1 \le M^{1/2}$ be a maximal subproduct of prime factors of $a$ with multiplicity, so $b_1 \le k$. When $b_1 < a$, pick any prime $p^* \mid (a / b_1)$ and put $b_2 := p^* \le k$. Maximality of $b_1$ forces $b_1 p^* > M^{1/2}$, whence $b_3 := a / (b_1 p^*) < M / M^{1/2} = M^{1/2}$ and $b_3 \le k$. Sequential extension via Lemma~\ref{lem:cgcd} across those $\le 3 |A_{\mathrm{sm}}|$ factors in $\{1, \dots, k\}$ covers $A_{\mathrm{sm}}$ in size $\le 3 |A_{\mathrm{sm}}|$. Theorem~\ref{thm:peel} ($L_0 = 3 n$) then extends that cover to $A$ in size $\le 3 |A_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| \le 3 n$.
+\end{proof}
+
+\section{Smooth Extreme-Point LP Rank Rounding and Global Bounds}
+
+This section restricts linear-programming vertex rounding to smooth subsets so the rounding error drops from $+2 n$ to $o(n)$.
+
+\begin{theorem}[Extreme-Point LP Rank Rounding, Hinge Equivalence, and Surcharge Elimination]
+\label{thm:lp}
+\leavevmode
+\begin{enumerate}
+\item \emph{(Support-rank rounding).} Any finite nonempty set $A_{\mathrm{sm}} \subseteq \mathbb{Z}_{\ge 2}$ with active primes $P(A_{\mathrm{sm}})$ below $Q$ and any interval $I$ of length $M \ge \max(A_{\mathrm{sm}})$ satisfy
+\[
+\tau(A_{\mathrm{sm}}, I) \le \lfloor \tau^*(A_{\mathrm{sm}}, I) \rfloor + |P(A_{\mathrm{sm}})| \le \lfloor \tau^*(A_{\mathrm{sm}}, I) \rfloor + \pi(Q - 1).
+\]
+\item \emph{(Hinge equivalence).} Given $w = (w_p)_{p \le M} \in \mathbb{R}_{\ge 0}^{\pi(M)}$, put $X_w(m) := \sum_{p \le M} v_p(m) w_p$. Across each $M \ge 1$, interval $I = \{x + 1, \dots, x + M\}$ ($x \ge 0$), and $c \ge 1$, two statements are equivalent.
+\begin{itemize}
+\item \emph{(Fractional bound).} Every nonempty subset $A \subseteq \{1, \dots, M\}$ satisfies $\tau^*(A, I) \le c |A|$.
+\item \emph{(Shifted-interval hinge inequality $(H_c)$).} All weight vectors $w \in [0, 1]^{\{p \le M\}}$ satisfy
+\[
+\sum_{m = 1}^M (X_w(m) - c)_+ \le \sum_{b \in I} (X_w(b) - 1)_+.
+\]
+\end{itemize}
+\item \emph{(Surcharge elimination).} Suppose $(H_c)$ holds for all $(M, I)$ at some $c \ge 2$, and let $Q_n$ be the least integer $\ge \lfloor c n \rfloor + \pi(Q_n - 1) + 1$ (so $Q_n = c n + (1 + o(1)) c n / \ln n > c n$). Each $n$-set $A$ with $M = \max(A) \le Q_n^2 - 1$ (including all $M \le c^2 n^2$) obeys $\tau(A, I) \le \lfloor c n \rfloor + \pi(Q_n - 1) = (c + o(1)) n$. Two consequences follow immediately.
+\begin{itemize}
+\item Combining $c \ge 3$ with Corollary~\ref{cor:quad} ($M \ge 9 n^2 \le c^2 n^2$) gives $g(n) \le \lfloor c n \rfloor + \pi(Q_n - 1) = (c + o(1)) n$ across all $M \ge 2$. Invoking Chen's unconditional inequality $(H_{56501 / 6400})$~\cite{chen26} yields $g(n) \le (56501 / 6400 + o(1)) n < (8.8283 + o(1)) n$, with $g(n) \le 10 n$ for $n \ge 1{,}446$ ($g(n) \le 9 n$ for $n \ge 4.11 \times 10^{27}$). Meanwhile the Lean-4-formalized inequality $(H_{97 / 10})$~\cite{chen26} yields $g(n) \le (9.7 + o(1)) n$, with $g(n) \le 11 n$ for $n \ge 1{,}254$.
+\item At $c = 2$, the hinge bound $(H_2)$ implies $\tau(A, I) \le 2 n + (2 + o(1)) n / \ln n = (2 + o(1)) n$ across $M \le 4 n^2$.
+\end{itemize}
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(1) The polytope $\mathcal{P} = \{x \in [0, 1]^I : \forall p \in P(A_{\mathrm{sm}}), \; \sum_{b \in I} v_p(b) x_b \ge D_p(A_{\mathrm{sm}})\}$ is nonempty ($x_b = 1$ is feasible by Legendre majorization) and compact. Thus $\sum_{b \in I} x_b$ attains its minimum $\tau^*(A_{\mathrm{sm}}, I)$ at an extreme point $x^* \in \mathcal{P}$. Set $F := \{b \in I : 0 < x^*_b < 1\}$. Because $x^*$ is an extreme point, the columns $(v_p(b))_{p \in T, b \in F}$ of the tight demand rows $T \subseteq P(A_{\mathrm{sm}})$ are linearly independent, giving $|F| \le |T| \le |P(A_{\mathrm{sm}})|$. If $|F| = 0$, the point $x^*$ is integral and $\tau(A_{\mathrm{sm}}, I) = \tau^*(A_{\mathrm{sm}}, I)$. When $|F| \ge 1$, rounding $\hat{x}_b := \lceil x^*_b \rceil \in \{0, 1\}$ preserves demand feasibility and gives $\sum_{b \in I} \hat{x}_b = |\{b : x^*_b = 1\}| + |F| < \sum_{b \in I} x^*_b + |F| \le \tau^*(A_{\mathrm{sm}}, I) + |P(A_{\mathrm{sm}})|$. Integrality of $\sum \hat{x}_b$ yields $\tau(A_{\mathrm{sm}}, I) \le \lfloor \tau^*(A_{\mathrm{sm}}, I) \rfloor + |P(A_{\mathrm{sm}})|$.
+
+(2) Linear-programming strong duality on $0 \le x_b \le 1$ (with dual weights $w_p \ge 0$ and upper-bound multipliers $z_b = (X_w(b) - 1)_+$) gives
+\[
+\tau^*(A, I) = \max_{w \ge 0} \Bigl[ \sum_{a \in A} X_w(a) - \sum_{b \in I} (X_w(b) - 1)_+ \Bigr].
+\]
+Consider \emph{Legendre clipping} to $[0, 1]^{\{p \le M\}}$. If $w_{p_0} = 1 + \delta > 1$, lowering $w_{p_0}$ to $1$ reduces $\sum_{a \in A} X_w(a)$ by $\delta D_{p_0}(A)$. Meanwhile every $b \in I$ divisible by $p_0$ retains $X_{w'}(b) \ge v_{p_0}(b) \ge 1$, so $\sum_{b \in I} (X_w(b) - 1)_+$ drops by $\delta \sum_{b \in I} v_{p_0}(b) \ge \delta \sum_{r \ge 1} \lfloor M / p_0^r \rfloor \ge \delta D_{p_0}(A)$. Hence the dual maximum is attained on $[0, 1]^{\{p \le M\}}$. Next, $\tau^*(A, I) \le c |A|$ holds for all nonempty $A \subseteq \{1, \dots, M\}$ (and for $A = \emptyset$) if and only if every $w \in [0, 1]^{\{p \le M\}}$ obeys $\max_{A \subseteq \{1, \dots, M\}} (\sum_{a \in A} X_w(a) - c |A|) \le \sum_{b \in I} (X_w(b) - 1)_+$. The left-hand maximum is attained at $A = \{1 \le m \le M : X_w(m) > c\}$ and equals $\sum_{m = 1}^M (X_w(m) - c)_+$.
+
+(3) Because $Q - \pi(Q - 1)$ is nondecreasing and rises by $1$ at every composite $Q - 1$, the threshold $Q_n$ exists and satisfies $Q_n = c n + (1 + o(1)) c n / \ln n > c n$. For $M \le Q_n^2 - 1$, split $A = A_{\mathrm{sm}} \sqcup A_{\mathrm{hi}}$ at $Q_n$. Parts~(1) and~(2) yield a cover $B_{\mathrm{sm}} \subseteq I$ of $A_{\mathrm{sm}}$ with $|B_{\mathrm{sm}}| \le \lfloor c |A_{\mathrm{sm}}| \rfloor + \pi(Q_n - 1)$ (or $0$ if $A_{\mathrm{sm}} = \emptyset$). Since $c \ge 2$ and $2 |A_{\mathrm{hi}}| \in \mathbb{Z}$, the floor identity gives $\lfloor c |A_{\mathrm{sm}}| \rfloor + 2 |A_{\mathrm{hi}}| = \lfloor c |A_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| \rfloor \le \lfloor c n \rfloor$. Thus $L := |B_{\mathrm{sm}}| + 2 |A_{\mathrm{hi}}| \le \lfloor c n \rfloor + \pi(Q_n - 1) =: L_0 \le Q_n - 1$, giving $Q_n \ge L_0 + 1$ and $Q_n^2 > M$. Theorem~\ref{thm:peel} extends $B_{\mathrm{sm}}$ to $A$ in size $\le L \le \lfloor c n \rfloor + \pi(Q_n - 1)$. When $c \ge 3$, Corollary~\ref{cor:quad} covers all $M \ge Q_n^2 > c^2 n^2 \ge 9 n^2$ in size $\le 3 n \le c n$. Testing $Q = 10 n + 1$ at $c = 56501 / 6400$ (and $Q = 11 n + 1$ at $c = 97 / 10$) with Rosser and Schoenfeld's bound $\pi(x) < 1.25506 x / \ln x$ ($x > 1$)~\cite{rosserschoenfeld62} gives $\lfloor c n \rfloor + \pi(Q - 1) \le Q - 1$, hence $Q_n \le Q$, for $n \ge 4{,}486$ (and $n \ge 3{,}722$). Direct finite evaluation of $Q_n$ across $1{,}446 \le n \le 4{,}485$ and $1{,}254 \le n \le 3{,}721$ (verified computationally via our accompanying verification suite~\cite{bergstrom26code}) completes both bounds.
+\end{proof}
+
+\section{Universal Semiprime Multigraph Saving and Cross-Tier Obstructions}
+
+This section proves an unconditional vertex-saving bound for arbitrary semiprime multigraphs without prime-size restrictions.
+
+\begin{theorem}[Universal Semiprime Multigraph Saving Bound]
+\label{thm:multigraph}
+Fix $M \ge 2$ and $I = \{x + 1, \dots, x + M\}$ ($x \ge 0$). Let $G = (V, E)$ be a loopless multigraph on primes $V$ with $|E| = m$ edges, $u_e w_e \le M$ for all $e = \{u_e, w_e\} \in E$ ($u_e \neq w_e$), and $\deg_E(v) \le |I \cap v \mathbb{Z}|$ for all $v \in V$.
+\begin{enumerate}
+\item \emph{General multigraphs.} The cover number obeys $\tau(G, I) := \tau(\{u_e w_e : e \in E\}, I) \le 2 m - \lceil |V_{\mathrm{non\text{-}iso}}| / 2 \rceil$.
+\item \emph{Bipartite multigraphs.} When $G = (P \sqcup Q, E)$ is bipartite, $\tau(G, I) \le 2 m - \max(|P_{\mathrm{non\text{-}iso}}|, |Q_{\mathrm{non\text{-}iso}}|)$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+For each edge $e = \{u_e, w_e\} \in E$, pick a multiple $b_e \in I$ of $u_e w_e \le M$, and put $B_{\mathrm{init}} := \{b_e : e \in E\} \subseteq I$ with $t := |B_{\mathrm{init}}| \ge 1$. Define $V(b) := \bigcup_{e \in E : b_e = b} \{u_e, w_e\} \subseteq V$ for each $b \in B_{\mathrm{init}}$, so $|V(b)| \ge 2$ and $\prod_{v \in V(b)} v \mid b$. For $v \in V$, set $c_v := |\{b \in B_{\mathrm{init}} : v \in V(b)\}|$ and $\tilde{c}_v := |\{b \in B_{\mathrm{init}} : v \mid b\}| \ge c_v$. Then $v^{\tilde{c}_v}$ divides $\prod_{b \in B_{\mathrm{init}}} b$. Whenever $\tilde{c}_v < \deg_E(v)$, adjoin $\deg_E(v) - \tilde{c}_v$ untouched multiples of $v$ from $I \setminus B_{\mathrm{init}}$. Taking the union over $v \in V$ covers $G$ in size $|B| \le t + \sum_{v \in V} (\deg_E(v) - c_v) = 2 m + t - \sum_{b \in B_{\mathrm{init}}} |V(b)|$. Since $|V(b)| \ge 2$ for all $b \in B_{\mathrm{init}}$ and $\sum_{b \in B_{\mathrm{init}}} |V(b)| \ge |\bigcup_{b \in B_{\mathrm{init}}} V(b)| = |V_{\mathrm{non\text{-}iso}}|$, this gives $|B| \le \min(2 m - t, 2 m + t - |V_{\mathrm{non\text{-}iso}}|) \le 2 m - \lceil |V_{\mathrm{non\text{-}iso}}| / 2 \rceil$. When $G = (P \sqcup Q, E)$ is bipartite, $|V(b) \cap P| \ge 1$ gives $|V(b)| - 1 \ge |V(b) \cap Q|$. Summing over $b \in B_{\mathrm{init}}$ yields $\sum_b (|V(b)| - 1) \ge |Q_{\mathrm{non\text{-}iso}}|$, and symmetry gives $\ge |P_{\mathrm{non\text{-}iso}}|$.
+\end{proof}
+
+\begin{remark}[Cross-tier obstruction below $M = n^3$]
+\label{rem:tier}
+Choose $4 n^2 \le M < n^{2.9}$ with $n / 3$ primes $q_i \approx M^{0.505}$, three primes $p_k \approx M^{0.33}$, and three primes $r_k \approx M^{0.165}$, forming $A = \{r_k p_k q_i : 1 \le k \le 3, \; 1 \le i \le n / 3\}$. Because $|I \cap p_k^2 \mathbb{Z}| = O(M^{0.34}) = o(n)$ and $|I \cap r_k^4 \mathbb{Z}| = O(M^{0.34}) = o(n)$, uncoupled tier splitting gives $\tau(D|_{> M^{1/2}}, I) + \tau(D|_{[2, M^{1/2}]}, I) = (7/3 - o(1)) n > 2 n$. Theorem~\ref{thm:peel} (Regime~2) instead covers $A$ in $\le 5 n / 3$ picks. Even if $q_i \approx M^{0.495} < M^{1/2}$, Theorem~\ref{thm:multigraph}(2) covers $E = \{p_k q_i\}$ ($p_k q_i \le M / 2$) in $\le 5 n / 3$ picks plus $n / 3$ picks for $\{r_1, r_2, r_3\}$, totaling $\le 2 n$.
+\end{remark}
+
+\section{Maximal-Proper-Divisor Matching and Telescoping Structure of $(H_2)$}
+
+This section records two reductions of $(H_2)$ and identifies the parity obstruction to pointwise level-set dominance.
+
+\begin{proposition}[Maximal-Proper-Divisor Matching Criterion and Single-Prime Telescoping]
+\label{prop:h2}
+Let $M \ge 1$ and $I = \{x + 1, \dots, x + M\}$ ($x \ge 0$).
+\begin{enumerate}
+\item \emph{(Combinatorial matching sufficiency).} Set $\mathcal{M}_{\ge 3} := \{1 \le m \le M : \Omega(m) \ge 3\}$. An injection $\pi : \mathcal{M}_{\ge 3} \hookrightarrow I$ satisfying $(m / p) \mid \pi(m)$ for at least one prime $p \mid m$ at each $m \in \mathcal{M}_{\ge 3}$ implies $(H_2)$ for $(M, I)$ across all $w \in [0, 1]^{\{p \le M\}}$ simultaneously.
+\item \emph{(Prime-by-prime telescoping identity).} Fix any ordering $p_1, \dots, p_K$ of the primes $\le M$, and put $Y_j(n) := \sum_{i < j} v_{p_i}(n) w_{p_i}$. Then $(H_2)$ is equivalent to
+\[
+\sum_{j = 1}^K \sum_{r \ge 1} \sum_{k = 1}^{\lfloor M / p_j^r \rfloor} \int_{1 - r w_{p_j}}^{1 - (r - 1) w_{p_j}} \mathbf{1}_{Y_j(k) > s + 1} \, ds \le \sum_{j = 1}^K \sum_{r \ge 1} \sum_{b' \in I_{j, r}} \int_{1 - r w_{p_j}}^{1 - (r - 1) w_{p_j}} \mathbf{1}_{Y_j(b') > s} \, ds,
+\]
+where $I_{j, r} := \{\lfloor x / p_j^r \rfloor + 1, \dots, \lfloor (x + M) / p_j^r \rfloor\}$ has cardinality $|I_{j, r}| \in \{\lfloor M / p_j^r \rfloor, \lfloor M / p_j^r \rfloor + 1\}$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(1) For $w \in [0, 1]^{\{p \le M\}}$, every $m \in \{1, \dots, M\} \setminus \mathcal{M}_{\ge 3}$ has $\Omega(m) \le 2$, so $X_w(m) \le 2$ and $(X_w(m) - 2)_+ = 0$. When $m \in \mathcal{M}_{\ge 3}$ satisfies $(m / p) \mid \pi(m)$, the valuation inequality $X_w(\pi(m)) \ge X_w(m / p) = X_w(m) - w_p \ge X_w(m) - 1$ gives $(X_w(\pi(m)) - 1)_+ \ge (X_w(m) - 2)_+$. Summing over the injective image $\pi(\mathcal{M}_{\ge 3}) \subseteq I$ yields $(H_2)$.
+
+(2) Since $\gcd(p_i, p_j) = 1$ for $i < j$, the prefix sum obeys $Y_j(p_j^r k) = Y_j(k)$ for all $r \ge 1$ and $k \ge 1$. Summing $(Y_j(n) + v_{p_j}(n) w_{p_j} - c)_+ - (Y_j(n) - c)_+$ over $j = 1, \dots, K$ telescopes to $(X_w(n) - c)_+$. Expand each $j$-th step over $1 \le r \le v_{p_j}(n)$ via $(u - a)_+ - (u - b)_+ = \int_a^b \mathbf{1}_{u > t} \, dt$ at $a = c - r w_{p_j} \le c - (r - 1) w_{p_j} = b$. Substituting $t = s + 1$ at $c = 2$ on $\{1, \dots, M\}$ and $t = s$ at $c = 1$ on $I$ yields both sides identically.
+\end{proof}
+
+\begin{remark}[Computational verification and the Hensley--Richards $s = 0$ barrier]
+Three computational and analytic observations (verified via our accompanying verification suite~\cite{bergstrom26code}) clarify Proposition~\ref{prop:h2}.
+\begin{enumerate}
+\item Hopcroft--Karp bipartite matching constructs $\pi : \mathcal{M}_{\ge 3} \hookrightarrow I$ across all $x \in [0, 1000]$ for $M \in \{12, 24, \dots, 120\}$ ($10{,}010$ windows), as well as across both adversarial Chinese Remainder configurations ($x \equiv 0 \pmod{\lcm(1, \dots, M)}$ and centered prime-power alignment $x + \lfloor M/2 \rfloor + 1 \equiv p \pmod{p^{e_p}}$ for $p^{e_p} > M$) up to $M = 15{,}120$ ($9{,}457$ of $9{,}457$ matched). Restricting Proposition~\ref{prop:h2}(1) to $p = p_{\max}(m)$ alone fails at $M = 2{,}520$ ($1{,}431$ of $1{,}434$ matched), whereas allowing any prime $p \mid m$ succeeds universally.
+\item Sliding-window evaluations ($18{,}037$ primary and $360{,}000{,}000$ extended window checks) confirm $\max(\sum_{m = 1}^M (X_w(m) - 2)_+ - \sum_{b \in I} (X_w(b) - 1)_+) = 0$. Testing sub-critical $c = 1.8 < 2$ fails on the $32$-prime Erd\H{o}s--Sur\'anyi clique on $[503, 709]$ at $M = 497{,}009$ ($\mathrm{LHS} = 105.4 > \mathrm{RHS} = 93.0$).
+\item Pointwise dominance $|\{k \le L : Y(k) > s + 1\}| \le |\{b' \in I' : Y(b') > s\}|$ at $s = 0$ fails for Proposition~\ref{prop:h2}(2). Setting $w_q = 1$ on all primes $q \le L$ at $s = 0$ gives $\pi(x + L) - \pi(x) \le \pi(L) + 1$, the Second Hardy--Littlewood inequality, which fails for $L \ge e^{100}$ by $\Theta(L / \ln^2 L)$~\cite{hensleyrichards74}. Proving $(H_2)$ (or its $(2 + \varepsilon)$-analogue on $(2 + \varepsilon) n$-smooth weights) therefore requires averaging across $s$.
+\end{enumerate}
+\end{remark}
+
+\section*{Data and Code Availability}
+
+All computational checks for Theorem~\ref{thm:peel}, Corollary~\ref{cor:quad}, the finite cutoffs of Theorem~\ref{thm:lp}(3), Theorem~\ref{thm:multigraph}, and Proposition~\ref{prop:h2} (up to $M = 15{,}120$) are deterministically reproducible via the standalone Rust and independent arbitrary-precision verification suites archived at Zenodo~\cite{bergstrom26code} (\url{https://doi.org/10.5281/zenodo.24342717}), with source SHA-256 digests \texttt{312e8fb7a27ce66ab4b72a6d758138da5cb3926218f8464b38636e670655b52c} and \texttt{be0b65d47711340b70bf281caaf4734ba2be1f28e52fa587f1898532fa7cc17c}.
+
+\section*{Acknowledgments and Declaration of Generative AI}
+
+During the preparation of this work, the author used internal research automation (Karen, 24x AI Research) and large language model assistance (Google Gemini) for proof exploration, computational stress-testing, and manuscript editing. After using these tools, the author reviewed, verified, and edited the content as needed and takes full responsibility for the mathematical correctness and content of the publication.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

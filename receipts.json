@@ -1,0 +1,32 @@
+{
+  "run_id": "erdos-708-asymptotic-2026-11-18",
+  "system": "Karen (24x AI Research)",
+  "author": "C. Bergström",
+  "affiliation": "24x AI Research",
+  "orcid": "0009-0008-7153-1817",
+  "problem_id": 708,
+  "unconditional_global_asymptotic_coeff_rational": "56501/6400",
+  "unconditional_global_10n_threshold": 1446,
+  "unconditional_global_10n_rs_cutoff": 4486,
+  "lean4_hinge_global_asymptotic_coeff_rational": "97/10",
+  "lean4_hinge_global_11n_threshold": 1254,
+  "lean4_hinge_global_11n_rs_cutoff": 3722,
+  "self_contained_quadratic_bound": {
+    "threshold": "M >= 9 n^2",
+    "bound": "3 n",
+    "rust_trials_verified": 500,
+    "bigint_trials_verified": 120
+  },
+  "whole_cofactor_peeling_regime1_trials": 500,
+  "hinge_h2_sliding_evals_fast_rust": 18037,
+  "hinge_h2_sliding_evals_extended_rust": 360000000,
+  "hinge_h2_sliding_evals_ts": 6021,
+  "erdos_suranyi_32prime_clique_m": 497009,
+  "erdos_suranyi_c18_lhs": 105.4,
+  "erdos_suranyi_c18_rhs": 93.0,
+  "prop8_telescoping_identity_trials": 200,
+  "prop8_sliding_windows_verified": 10010,
+  "prop8_m5040_matched": 2992,
+  "prop8_m15120_matched": 9457,
+  "prop8_m2520_pmax_only_deficit": 3
+}

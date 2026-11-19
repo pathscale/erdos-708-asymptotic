@@ -1,0 +1,22 @@
+# Certified Numerical Constants for Erdős Problem #708 (Companion Asymptotic Reduction)
+
+- **Author:** C. Bergström (`24x AI Research`, ORCID `0009-0008-7153-1817`)
+- **System:** `Karen` (`24x AI Research`)
+- **Unconditional global bounds established (`Theorem 5(3)` + `Corollary 4` + Chen `10.5281/zenodo.22660853`):**
+  - From $(H_{56501/6400})$: $g(n) \le (56501/6400 + o(1)) n < (8.8283 + o(1)) n$ across all $M \ge 2$, with **$g(n) \le 10 n$ for all $n \ge 1{,}446$** (finitely verified on $1{,}446 \le n \le 4{,}485$, Rosser–Schoenfeld analytic closure for $n \ge 4{,}486$; sharp at $n = 1{,}445$)
+  - From Lean-4-formalized $(H_{97/10})$: $g(n) \le (9.7 + o(1)) n$ across all $M \ge 2$, with **$g(n) \le 11 n$ for all $n \ge 1{,}254$** (finitely verified on $1{,}254 \le n \le 3{,}721$, Rosser–Schoenfeld analytic closure for $n \ge 3{,}722$; sharp at $n = 1{,}253$)
+- **Self-contained quadratic-interval bound (`Corollary 4`):**
+  - $\tau(A, I) \le 3|A_{\mathrm{sm}}| + 2|A_{\mathrm{hi}}| \le 3n$ for all $M \ge 9n^2$ (`500` Rust valuation trials + `120` Bun `BigInt` product trials verified)
+- **Whole-Cofactor Peeling regimes (`Theorem 3`, $L_0 = 2n$):**
+  - Regime I ($2n < M \le 4n^2 + 4n$): $Q = 2n + 1$, reduces to $2n$-smooth sets (`500` constructive trials verified)
+  - Regime II ($M \ge 4n^2$): $Q = \lfloor M^{1/2} \rfloor + 1$, reduces to $\lfloor M^{1/2} \rfloor$-smooth sets
+- **Critical Hinge Inequality $(H_2)$ vs. $(H_{1.8})$ sharpness (`verify_asymptotic_708.rs` & `check708-asymptotic-independent.ts`):**
+  - Sliding-window + CRT evaluations at $c = 2.00$: `18,037` fast-suite (`360,000,000` in `--extended`), `max(LHS_2 - RHS_1) = 0.0`
+  - 32-prime Erdős–Surányi clique on $[503, 709]$ ($M = 497{,}009$):
+    - At $c = 2.00$: `LHS = 0.0 <= RHS = 93.0` (`PASS`)
+    - At $c = 1.80$: `LHS = 105.4 > RHS = 93.0` (`REJECT` in both verifiers)
+- **Maximal-Proper-Divisor Matching $\pi : \mathcal{M}_{\ge 3} \hookrightarrow I$ & Telescoping (`Proposition 8`):**
+  - Exact prime-by-prime telescoping integral identity (`Proposition 8(2)`): `200` configurations verified to `< 1e-11`
+  - Sliding shifts $x \in [0, 1000]$ across $M \in \{12, 24, \dots, 120\}$: `10,010 / 10,010` intervals `100%` matched
+  - Adversarial CRT spikes (`LCM_zero` and `ES_vp1`): `2,992 / 2,992` matched at $M = 5{,}040$; **`9,457 / 9,457` matched at $M = 15{,}120$** (verified in both Rust and Bun `BigInt`)
+  - Restricting to $p = p_{\max}(m)$ alone at $M = 2{,}520$ (`ES_vp1`): `1,431 / 1,434` (`deficit = 3`, confirming necessity of allowing arbitrary prime divisors $p \mid m$)
